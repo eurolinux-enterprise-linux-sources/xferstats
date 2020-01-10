@@ -1,0 +1,600 @@
+.\" @(#)xferstats.8 2.16 10/31/00;
+.\" updated 10/31/00 phil@off.net (Phil Schwan);
+.\" .hw precedence
+.TH XFERSTATS 8 "31 Oct 2000"
+.SH NAME
+xferstats \- compiles information about file transfers from logfiles
+.SH SYNOPSIS
+.B xferstats
+[- | + ] [-c <config file>] [-T <number>] [[-+]C] [[-+]H] [[-+]n] [[-+]s]
+[[-+]r] [[-+]a] [[-+]g] [[-+]i] [[-+]u] [[-+]h] [[-+]m] [[-+]w] [[-+]M]
+[[-+]f [number]] [[-+]d [number]] [[-+]t [number]] [[-+]O [number]]
+[[-+]o [number]] [+L <number>] [+A] [-D <number>] [+D <number>] [+P <prefix>]
+[+B <timestamp>] [+E <timestamp>] [-v] [--version] [--help] [--] [filename(s)]
+
+.SH DESCRIPTION
+.LP
+.B xferstats
+is a utility that parses wu-ftpd, ncftpd, and (special) apache
+.BR xferlogs
+(although it's not difficult to add support for other log types) and gives
+various information and totals about the data transferred.
+
+.SH OPTIONS
+.TP
+.B \+
+The single plus tells
+.BR xferstats
+to get the
+.BR xferlog
+from stdin.  For example:
+.IP
+cat xferlog | xferstats \+
+.TP
+.B \-
+The single hyphen tells
+.BR xferstats
+to get the
+.BR xferlog
+from a file.  While this is the default behaviour, the configuration file may
+change the default, and this option allows you to override it.  For example:
+.IP
+xferstats \- /var/log/xferlog
+.TP
+.BI \-c " configuration file"
+Specify an alternate path and filename for the configuration file.  The packaged
+default is
+.I /usr/local/etc/xferstats.cfg
+but your administrator may have changed this.  A new default can be set by
+changing the appropriate variable in xferstats.h and recompiling.
+.TP
+.BI \-T " log type"
+Specify the type of log file to be parsed.  Currently, only three types are
+defined,
+.B wu-ftpd
+for wu-ftpd-style logs,
+.B ncftpd
+for ncftpd-style logs, and
+.B apache
+for special Apache logs.  Note: you can also use "wu-ftp", "wuftp", "wuftpd", or
+"ncftp".
+In order for xferstats to parse Apache logfiles, you must use a special LogFile
+line: LogFormat "%{%a %b %d %X %Y}t %T %h %b %f %u".
+.B xferstats
+may or may not support regular Apache logfiles in the future.  If this is
+something you want, please let me know.
+.TP
+.B \-v, \-\-version
+Display what version of 
+.B xferstats
+you're running.
+.TP
+.B \-\-help
+Display a quick summary of the command line options.
+.TP
+.B \-\-
+Use a -- (double hyphen) to indicate that you are finished giving parameters
+and will follow with a filename.  This is particularly useful when you want to
+specify a filename that begins with a + or -
+
+.SS TOGGLE OPTIONS
+.P
+The options in this section can be either forced on with +[option] or forced
+off with -[option].  Options in this section, like all other options, will
+always override any settings in the xferstats configuration file.  Any
+arguments to toggle options should only be used when enabling an option. 
+Supplying an argument when disabling an option will generate an error.
+
+.TP
+.B C
+When enabled, xferstats will try to weed out corrupt log lines by strictly
+checking to make sure that the data is valid.  If you --enable-debug_flow at
+compile time, xferstats will notify you when corrupt lines are detected.
+.TP
+.B H
+When enabled, xferstats will generate HTML tables and graphs instead
+of text tables.  In order to actually generate tables instead of broken
+graphic icons, you must put the graph JPGs in the directory pointed to by the
+GRAPH_PATH configuration command.  For more information, see the CONFIGURATION
+FILE section.
+.TP
+.B n
+When enabled, xferstats will refrain from adding <HTML>, <BODY>, and <TITLE>
+tags, so that the output can be inserted into pages containing custom headers.
+.TP
+.B s
+When enabled, xferstats will output HTML as a single page (filename
+"xferstats.html") instead of a page for each section.  This option also
+disables <HTML> and <BODY> tags, although it does produce a <TITLE> tag unless
+the NO_HTML_HEADERS option is also specified.
+.TP
+.B r
+When enabled, xferstats will generate statistics about real user connections
+(but not necessarily
+.B only
+real user connections)
+.TP
+.B a
+When enabled, xferstats will generate statistics about anonymous connections
+(but not necessarily
+.B only
+anonymous connections)
+.TP
+.B g
+When enabled, xferstats will generate statistics about guest connections (but
+not necessarily
+.B only
+guest connections)
+.TP
+.B i
+When enabled, xferstats will generate statistics about inbound (the product of
+a PUT) files (but not necessarily
+.B only
+inbound files)
+.TP
+.B u
+When enabled, xferstats will generate statistics about outbound (the product
+of a GET) files (but not necessarily
+.B only
+outbound files)
+.TP
+.B h
+When enabled, xferstats will generate a report listing traffic by hour
+.TP
+.B m
+When enabled, xferstats will generate a report listing traffic by month
+(January, February, etc.)
+.TP
+.B w
+When enabled, xferstats will generate a report listing traffic by day of the
+week (Monday, Tuesday, etc.)
+.TP
+.B M
+When enabled, xferstats will generate a report listing traffic by day of the
+month (1st, 2nd, 3rd, etc.)
+.TP
+.BI f\ [number]
+When enabled, xferstats will generate a report listing traffic by file.  You
+can supply an optional argument that will determine how many file records
+xferstats displays (0 (zero) disables the limit)
+.TP
+.BI d\ [number]
+When enabled, xferstats will generate a report listing traffic by directory.
+You can supply an optional argument that will determine how many directory
+records xferstats displays (0 (zero) disables the limit).  See the -D and +D
+options, as well as the DIR_DEPTH and DIR_FILTER configuration commands for more
+information.
+.TP
+.BI t\ [number]
+When enabled, xferstats will generate a report listing traffic by top-level
+domain.  You can supply an optional argument that will determine how many TLD
+records xferstats displays (0 (zero) disables the limit)
+.TP
+.BI O\ [number]
+When enabled, xferstats will generate a report listing traffic by domain.  You
+can supply an optional argument that will determine how many domain records
+xferstats displays (0 (zero) disables the limit)
+.TP
+.BI o\ [number]
+When enabled, xferstats will generate a report listing traffic by host.  You
+can supply an optional argument that will determine how many host records
+xferstats displays (0 (zero) disables the limit)
+
+.SS OTHER OPTIONS
+.TP
+.B +A
+Include all users, generate all reports
+.TP
+.BI +L\ <number>
+Limit the daily report to the last <number> days
+.TP
+.BI \-D\ <number>
+Depth of path detail for directories (default 3)
+.TP
+.BI +D\ <directory>
+Generate reports on files located only in
+.IR <directory> .
+For example:
+.IP
+.BI +D\ /pub
+will report only on paths under
+.BR /pub .
+Specifying multiple +D options will instruct
+.B xferstats
+to include data from all specified directories.
+.TP
+.BI +P\ <path prefix>
+Strip the 
+.IR <prefix>
+from any pathnames that begin with it.  This is the same as specifying a
+.IR STRIP_PREFIX
+configuration file command.  Keep in mind that the
+.IR DIR_FILTER
+(or 
+.IR +D )
+is checked before the
+.IR STRIP_PREFIX
+(or
+.IR +P )
+when using these.
+.TP
+.BI +B\ <timestamp>
+Providing a +B argument instructs xferstats to only generate data on transfers
+occuring after that time.  The time stamp format is "Jan DD HH:MM:ss
+YYYY".  One may combine +B and +E to generate a report about a specific window
+in time.
+.TP
+.BI +E\ <timestamp>
+Providing a +E argument instructs xferstats to only generate data on transfers
+occuring before that time.  The time stamp format is "Jan DD HH:MM:ss
+YYYY".  One may combine +B and +E to generate a report about a specific window
+in time.
+.LP
+
+The default compile-time setting for the
+.B xferlog
+location is
+.B /var/log/xferlog
+but your administrator may have changed this.  If
+.B xferstats
+reports an error, try specifying the filename as the last command line
+parameter.
+
+.SH CONFIGURATION FILE
+.P
+The default configuration file path is
+.I /usr/local/etc/xferstats.cfg
+although your administrator may have changed this.
+.P
+Any text after a '#' is ignored, as long as the '#' begins a line or is
+prepended by whitespace.
+.P
+Commands (LOGFILE, ANON_TRAFFIC, etc) are not case sensitive, although some
+arguments may be.
+.P
+.TP 
+.B "LOGFILE <filename>"
+sets the default log file to process.  It can be overridden by adding
+"<filename>" at the end of the command line options.  You may specify as many
+LOGFILE lines as you like; they will be processed in the order specified
+(although the order processed should not change the output).  Example:
+.IP
+LOGFILE /var/log/xferlog
+LOGFILE /var/log/xferlog.1
+LOGFILE /var/log/xferlog.2
+.TP
+.B STRICT_CHECK
+takes no arguments.  When enabled, xferstats will try to weed out corrupt log
+lines by strictly checking to make sure that the data is valid.  If you
+--enable-debug_flow at compile time, xferstats will notify you when corrupt
+lines are detected.  It can be enabled with "+C" or disabled with "-C" on the
+command line.
+.TP
+.B ANON_TRAFFIC
+takes no arguments.  When enabled, xferstats will generate statistics about
+anonymous connections (but not necessarily
+.B only
+anonymous connections).  It can be enabled with "+a" or disabled with "-a" on
+the command line.
+.TP
+.B GUEST_TRAFFIC
+takes no arguments.  When enabled, xferstats will generate statistics about
+guest connections (but not necessarily
+.B only
+guest connections).  This option has no effect when parsing non-wuftpd
+logfiles.  It can be enabled with "+g" or disabled with "-g" on
+the command line.
+.TP
+.B REAL_TRAFFIC
+takes no arguments.  When enabled, xferstats will generate statistics about real
+user connections (but not necessarily
+.B only
+real user connections).  It can be enabled with "+r" or disabled with "-r" on
+the command line.
+.TP
+.B INBOUND
+takes no arguments.  When enabled, xferstats will generate statistics about 
+inbound (the product of a PUT) files (but not necessarily
+.B only
+inbound files). It can be enabled with "+i" or disabled with "-i" on the command
+line.
+.TP
+.B OUTBOUND
+takes no arguments.  When enabled, xferstats will generate statistics about
+outbound (the product of a GET) files (but not necessarily
+.B only
+outbound files). It can be enabled with "+u" or disabled with "-u" on the
+command line.
+.TP
+.B HOURLY_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic per hour.  It can be enabled with "+h" or disabled with "-h" on the
+command line.
+.TP
+.B DOW_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by day of the week (Monday, Tuesday, etc).  It can be enabled with "+w"
+or disabled with "-w" on the command line.
+.TP
+.B DOM_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by day of the month (1st, 2nd, etc).  It can be enabled with "+M" or
+disabled with "-M" on the command line.
+.TP
+.B TLD_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by top-level domain (com, edu, net, us, uk, etc).  It can be enabled
+with "+t <number>" or disabled with "-t" on the command line.
+.TP
+.B DOMAIN_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by domain (foo.com, blah.edu, etc).  It can be enabled with "+O
+<number>" or disabled with "-O" on the command line.
+.TP
+.B HOST_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by host.  It can be enabled with "+o" or disabled with "-o" on the
+command line.
+.TP
+.B DIR_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by directory.  The directory depth that xferstats will keep track of
+can be controlled by the DIR_DEPTH configuration command or with the "-l
+<depth>" command line option.  It can be enabled with "+d" or disabled with "-d"
+on the command line.
+.TP
+.B FILE_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic by file.  It can be enabled with "+f" or disabled with "-f" on the
+command line.
+.TP
+.B MONTHLY_REPORT
+takes no arguments.  When enabled, xferstats will generate a report listing
+traffic per month (January, February, etc).  It can be enabled with "+m" or
+disabled with "-m" on the command line.
+.TP
+.B HTML_OUTPUT
+takes no arguments.  When enabled, xferstats will output all reports into
+individual HTML files.  Future versions will contain a configuration option to
+set the directory in which to place the HTML files.  For now they are placed in
+the present working# directory. It can be enabled with "+H" or disabled with
+"-H" on the command line.
+.TP
+.B USE_STDIN
+takes no arguments.  When enabled, xferstats will, by default, read the logfile
+from the standard input instead of from a file on disk.  It can be enabled with
+"+" or disabled with "-" on the command line.
+.TP
+.B LOG_TYPE
+takes one argument, the type of log that will be processed by default.  The
+argument can be either a number or a case insensitive string and are as follows:
+.IP
+wu-ftpd log: "1" or "wu-ftp" or "wu-ftpd" or "wuftp" or "wuftpd"
+.IP
+ncftpd log : "2" or "ncftp" or "ncftpd"
+.IP
+Apache log : "3" or "apache"
+.IP
+Therefore:
+.IP
+LOG_TYPE 1
+.IP
+LOG_TYPE wu-ftp
+.IP
+LOG_TYPE wu-ftpd
+.IP
+LOG_TYPE wuftp
+.IP
+LOG_TYPE wuftpd
+.IP
+are all equivalent.
+.IP
+Future versions will contain support for additional logfile types. It can be
+set on the command line with "-T <number>"
+.TP
+.B DIR_DEPTH
+takes one argument, the number of subdirectories deep that xferstats should go
+when generating statistics by directory.  This configuration command has no
+effect when DIR_REPORT has not been enabled.  DIR_DEPTH has no upper bound.  A
+DIR_DEPTH of '0' (zero) tells xferstats to process all subdirectories. The
+default value is 3.  It can be set on the command line with "-D <number>".
+Example:
+.IP
+DIR_DEPTH 3
+.TP
+.B DIR_FILTER
+takes one argument, the directory that xferstats should report on.  xferstats
+will discard any data that does not have a path that begins with the value set
+by DIR_FILTER.  This value
+.B is
+case-sensitive, as it is part of a path name.  Specifying multiple statements
+will instruct
+.B xferstats
+to include data from all specified directories.  It can be set on the command
+line with "+D <path>".  Example:
+.IP
+DIR_FILTER /pub/foobar
+.TP
+.B NUMBER_FILE_STATS
+takes one argument, the number of files to report on in the file statistics
+section.  It must be a number greater than or equal to zero, with zero denoting
+no limit.  It can be set on the command line with "+f <number>".  The default is
+50.
+.IP
+NUMBER_FILE_STATS 50
+.TP
+.B NUMBER_DIR_STATS
+takes one argument, the number of directories to report on in the directory
+statistics section.  It must be a number greater than or equal to zero, with 
+zero denoting no limit.  It can be set on the command line with "+d <number>".
+The default is 50.
+.TP
+.B NUMBER_DAILY_STATS
+takes one argument, the number of days to report on in the daily statistics
+section.  It must be a number greater than or equal to zero, with zero denoting
+no limit.  It can be set on the command line with "+L <number>".  The default
+is 50.
+.IP
+Note: the daily statistics section will always be displayed.
+.TP
+.B NUMBER_TLD_STATS
+takes one argument, the number of top-level domains to report on in the TLD
+statistics section.  It must be a number greater than or equal to zero, with
+zero denoting no limit.  It can be set on the command line with "+t <number>".
+The default is 50.
+.TP
+.B NUMBER_DOMAIN_STATS
+takes one argument, the number of top-level domains to report on in the domain
+statistics section.  It must be a number greater than or equal to zero, with
+zero denoting no limit.  It can be set on the command line with "+O <number>".
+The default is 50.
+.TP
+.B NUMBER_HOST_STATS
+takes one argument, the number of hosts to report on in the host statistics
+section.  It must be a number greater than or equal to zero, with zero denoting
+no limit.  It can be set on the command line with "+o <number>".  The default is
+50.
+.TP
+.B MAX_REPORT_SIZE
+takes one argument, the maximum size of any one output table.  This is
+particularly useful to keep xferstats from generating gigantic tables that make
+graphical browsers choke.  It will split tables to be no larger than# this
+value.  It must be greater than or equal to ten, or zero, zero denoting no
+limit.  It can be set on the command line with "+R <number>".  The default is
+30.
+.TP
+.B GRAPH_PATH
+takes one argument, the location of the JPGs used to draw graphs in the HTML
+output.  It can be an absolute path (ie, http://foo.bar.com/graphs/) or a
+relative path (ie, ../graphs/).  You must include a trailing '/' or it
+.BR "will not work".
+This option cannot be set on the command line.  The default is nothing (which
+will make the browser look for the graphs in the directory with the HTML).
+Example:
+.IP
+GRAPH_PATH ../graphs/
+.TP
+.B NO_HTML_HEADERS
+takes no arguments.  When enabled, xferstats will refrain from adding <HTML>,
+<BODY>, and <TITLE> tags, so that the output can be inserted into pages
+containing custom headers. It can be enabled with "+n" or disabled with "-n" on
+the command line.
+.TP
+.B REFRESH
+takes one argument, the number of seconds after being displayed that
+the browser should refresh it.  Unspecified or zero indicates no refresh.
+.TP
+.B SINGLE_PAGE
+takes no arguments.  When enabled, xferstats will output HTML as a single page
+(entitled "xferstats.html") instead of a page for each section.  This option
+also disables <HTML> and <BODY> tags, although it does produce a <TITLE> tag
+unless the NO_HTML_HEADERS option is also specified. It can be enabled with
+"+s" or disabled with "-s" on the command line.
+.TP
+.B STRIP_PREFIX
+takes one argument.  When specified, xferstats will strip the given string from
+the beginning of any paths.  Keep in mind when using this option with
+.B DIR_FILTER
+that the
+.B DIR_FILTER
+is applied -before- stripping, so that you must
+take this into account when specifying the
+.B DIR_FILTER
+string.  This option cannot be set on the command line.  Example:
+.IP
+STRIP_PREFIX /home/ftp
+.P
+The next 11 entries are all basically the same--they define how the reports are
+to be sorted.
+.IP
+.B 0
+-- Sort by the number of bytes downloaded
+.IP
+.B 1
+-- Sort by the number of files downloaded
+.IP
+.B 2
+-- Sort by the "name".  This varies by report; for the file, directory, TLD, etc
+reports, it sorts them alphabetically; for the file size report it lists the
+file sizes in alphabetical order; for the daily report, it lists the days in
+order.  You get the idea.
+.B 3
+-- Sort by average throughput, in K/s
+.IP
+.BR FILE_SORT_PREF ,
+.BR DIR_SORT_PREF ,
+.BR DOMAIN_SORT_PREF ,
+.BR TLD_SORT_PREF ,
+.BR HOST_SORT_PREF ,
+.BR DOM_SORT_PREF ,
+.BR DOW_SORT_PREF ,
+.BR HOURLY_SORT_PREF ,
+.BR DAILY_SORT_PREF ,
+.BR SIZE_SORT_PREF ,
+.B MONTHLY_SORT_PREF
+.TP
+.B CHUNK_INPUT
+takes one argument.  When specified, xferstats will parse the logfiles in
+chunks of the given size (in number of lines), process them, and continue. 
+This will keep it from trying to parse the entire log at once, using up a lot
+of memory for large logs.  Specifying too small a value will cause xferstats
+to waste a lot of time switching tasks, while too large a value may slow it
+down as your system swaps.  Toy with this value a bit and see what works best
+for you.  If left unspecified, xferstats will continue to parse the logs in
+one pass. 
+
+.SH FILES
+.B xferlog
+(generated by wu-ftpd or ncftpd)
+.P
+.B /usr/local/etc/xferstats.cfg
+contains all of the default settings and many settings which cannot be set from
+the command line.
+.P
+If you installed the RPM version of xferstats, you'll find the JPGs for the
+graphs in /usr/doc/xferstats-x.xx/graphs  Insert the version you're running in
+place of the x.xx.
+
+.SH BUGS
+The JPG graph pieces included are not ideal; sometimes artifacts show up.  I
+will eventually get around to making new GIFs or something.
+.P
+Please send bug reports to phil@off.net
+If the xferlog that you're using is smaller than 1 megabyte, please send a
+gzipped copy, along with the exact parameters you're using.
+
+.SH ACKNOWLEDGEMENTS
+I greatly appreciate the suggestions and assistance of Nat Friedman
+<ndf@mit.edu>.
+.P
+Thanks to Mike Shaver <shaver@mozilla.org> and Jamie Zawinski
+<jwz@netscape.com> for coughing up gigantic mozilla.org logs to aid my testing.
+.P
+Thanks to Phil Copeland <bryce@zen.ics.uwe.ac.uk> for getting on my back
+constantly to add new stuff, fix nagging bugs, and speed it up.  Oh, and for
+using it, at least someone does :).
+.P
+Extreme gratitude to Mark Hagler <hagler@hagler.org>, someone whom I've left
+off of this list for too long.  Mark was kind enough to Amazon me a copy of
+O'Reillys _Pthreads Programming_ which was the catalyst for the threaded version
+and really helped get me interested in the project again.  While the threaded
+version doesn't exist anymore, the book is still terribly useful for other
+projects.
+.SH SEE ALSO
+.BR ftpd (8),
+.BR ncftpd (8),
+.BR xferlog (5)
+
+.SH LOCATION
+.B xferstats
+is available from the following locations.  The old addresses are valid, but
+are deprecated!  Please use the new addresses whenever possible.
+.IP
+http://xferstats.off.net/
+.IP
+ftp://xferstats.off.net/pub/xferstats/
+
+.SH AUTHOR
+.I xferstats
+is Copyright (c) 1997-2000 Phil Schwan <phil@off.net> and is released under
+the terms and provisions of the GNU Public License.

@@ -1,0 +1,21 @@
+This is pretty simple as far as source installations go:
+
+Step 0: If you're upgrading, read the ChangeLog!  I try not to break things,
+        but occasionally configuration options or defaults can change.
+
+Step 1: Run the "configure" script.
+
+Step 2: Compile xferstats.  A simple "make" should be all it takes.
+
+Step 3: If you desire, run "make install".
+
+Step 4: Read the man page.
+
+Step 5: Customize your xferstats.cfg to change default values.
+
+New and old versions are available at ftp://off.net/pub/xferstats as
+well as http://xferstats.off.net.  Feedback is welcome at the address
+below.
+
+Phil Schwan
+phil@off.net
