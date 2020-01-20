@@ -1,7 +1,7 @@
 Summary: Compiles information about file transfers from logfiles
 Name: xferstats
 Version: 2.16
-Release: 26%{?dist}
+Release: 28%{?dist}
 URL: http://xferstats.off.net/
 Source0: ftp://xferstats.off.net/%{name}-%{version}.tar.gz
 Patch0: xferstats.patch
@@ -47,6 +47,12 @@ cp -a graphs %{buildroot}%{_datadir}/xferstats/
 %{_datadir}/xferstats
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 2.16-28
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 2.16-27
+- Mass rebuild 2013-12-27
+
 * Thu Apr 04 2013 Jan Synáček <jsynacek@redhat.com> - 2.16-26
 - Add missing option to manpage
 
