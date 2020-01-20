@@ -1,0 +1,700 @@
+v2.16 changes (Oct 31 2000):
+
+config.c:
+	* Added an argument to SINGLE_PAGE, the name of the output file
+
+--------------------------------------------------------------------------------
+v2.15 changes (Oct 31 2000):
+
+This whole program is a ``my first C program'' disaster and needs rethought
+and rewritten.  Amazing what perspective 3 years will give you, eh?
+
+parselog.c:
+	* There were places where I was using free() instead of g_free().
+	  I'm surprised this didn't crash, but it did cause some warnings for
+	  one person.  Thanks Dima Sivachenko <dima@Chg.RU> for reporting the
+	  bug.
+	* Ripped out the stupid mmap() stuff in the wu-ftpd parser.
+	* Added support for the complete/incomplete marker in wu-ftpd logs,
+	  only 2 years after I submitted the patch to the wu-ftpd team (oops)
+config.c:
+	* Added configuration options to aid the placement of output.
+
+--------------------------------------------------------------------------------
+v2.14 changes (Feb 22 1999):
+
+display.c:
+	* Fixed a show-stopper (I'm frankly not sure how it escaped being
+	  noticed for so long): if asked to sort the days in order and told
+	  to print no more than X days where X is greater than the number of
+	  actual days in the log, xferstats crashed. (Thanks Ryan Weaver
+	  <ryanw@infohwy.com> for bringing this to my attention)
+
+--------------------------------------------------------------------------------
+v2.13 changes (Feb 20 1999):
+
+config.c:
+	* Added CHUNK_INPUT, REFRESH, BEGIN_DATE, and END_DATE code.
+
+display.c:
+	* Added the refresh bits.  These are completely untested; I am tired.
+	  Someone else tell me if they work. :)
+
+parselog.c:
+	* One can now specify a begin and end date for parsing logs.  Any log
+	  lines not within the range are filtered.
+	* Added input chunking code
+
+xferstats.c:
+	* Added the +B/+E command line options to specify begin/end dates.
+	* Added a +P command line option with the same functionality as the
+	  STRIP_PREFIX config file directive
+	* Many of the data generation functions weren't very keen on being
+	  called multiple times, so some fixing had to be done, especially
+	  the day of the week/day of the month/monthly.  Some corresponding
+	  changes were made to the initialisation function.
+
+xferstats.h:
+	* Added begin_date and end_date items to config_t.
+	* Added refresh item to config_t.
+
+--------------------------------------------------------------------------------
+v2.12 changes (Sep 29 1998):
+
+As of v2.12, xferstats uses the oh-so-wonderful glib for many basic functions
+(such as malloc, free, strdup, strcasecmp, snprintf, hashing, etc).  Updated
+versions are available on the xferstats ftp and www sites, as well as from
+ftp://www.gtk.org
+
+In other news, with some prodding from Miguel (who is correct :), I've abandoned
+the threaded version.  It's almost entirely unnecessary as xferstats is rarely
+CPU-bottlenecked, and if you've got an SMP system you've probably got fast
+enough processors for xferstats anyways.  It simplifies the code a great deal
+and lets me focus more on what's important.
+
+arena.c   : Deleted.  Replaced by glib functions.
+hashstr.c : Deleted.  Replaced by glib functions.
+hashstr.h : Deleted.  Replaced by glib functions.
+list.c    : Deleted.  Replaced by glib functions.
+snprintf.c: Deleted.  Replaced by glib functions.
+utils.c   : Deleted.  Replaced by glib functions.
+
+configure.in:
+	* Removed the malloc_stats() check, as glib now provides its own memory
+	  profiling support (compile glib with --enable-mem-profile to do so)
+	* Removed the Linux check, since it was used to determine whether or not
+	  to enable memory arenas.
+
+config.c:
+	* Added all of the sorting preference code. (This stuff is cool, play
+	  with it)  See the man page for more details.
+	* Added the STRICT_CHECK code.
+
+display.c:
+	* Condensed all of that ugly #ifdef BROKEN_LL/#ifdef IS_DEC, etc code
+	  with a simple define.  I was being such a dork when I wrote that code.
+	* Changed the way many things are displayed--everything uses arrays
+	  instead of linked lists now to facilitate the use of qsort().
+
+parselog.c:
+	* Added some code to assist debugging the parsers.
+	* If STRICT_CHECK (+/- C on the command line) is enabled, xferstats will
+	  check the date rigorously to make sure that it's sane.  After that,
+	  you're on your own.  More checks may be added in the future.
+
+xferstats.c:
+	* Fixed a couple of bugs that made domain or TLD data incorrect in
+	  certain circumstances.
+	* Fixed a moronic bug that made the monthly totals completely wrong in
+	  most cases--everything would show up as being during one month.
+	* Added the code in the data generation functions to allow user to
+	  specify how data is sorted.
+	* Added the code to allow +/- C on the command line.
+	* The -D (depth) command line argument was broken if you specified it
+	  in a certain way.
+
+xferstats.h:
+	* Removed references to functions that glib replaced.
+	* Made everything use arrays instead of linked lists to facilitate the
+	  use of qsort().  Deleted xfdays_t struct.
+	* Added wrapper macros for the G_MEM_CHUNKS calls.
+
+--------------------------------------------------------------------------------
+v2.11 changes (Sep 18 1998):
+
+configure.in:
+	* Added a check for alloca() (for the snprintf implementation) and
+	  consolidated some CHECK_FUNCS calls.
+	* Enabled the malloc_stats() check only when debug_flow is enabled
+
+Makefile.in:
+	* Added snprintf.c to the list of things to compile.
+
+config.c:
+	* Added the STRIP_PREFIX configuration file option.
+
+parselog.c:
+	* Changed the way ftp_line->path is copied to strip the STRIP_PREFIX
+	  string in the process.
+
+snprintf.c:
+	* This is a not-so-fast but secure snprintf implementation.  I borrowed
+	  some maximum string length code from GLIB (which is a wonderful
+	  library) and wrote a quick wrapper around that.  This should fix the
+	  Digital Unix and Solaris brokenness, as well as make that fabled
+	  ULTRIX port one step closer! :)
+
+xferstats.c:
+	* The behaviour of the LOGFILE config command and command line logfiles
+	  has been changed.  Now, specifying any logfile on the command line
+	  will make xferstats dump any LOGFILE directives specified in the
+	  configuration file.  I think this is more intuitive.
+
+xferstats.h:
+	* Added snprintf() prototype.
+
+--------------------------------------------------------------------------------
+v2.10 changes (Sep 05 1998):
+
+This version contains a vast number of bug fixes ranging from memory leaks
+to portability issues to incorrect behaviour issues.  It also contains a
+new report (file size), the beginnings of the additive database code
+(don't use it just yet, trust me), and the ability to parse multiple
+logfiles without resorting to concatenating them beforehand or catting
+them together into stdin.
+
+I do believe, however, that this is the most stable version of xferstats
+available and I recommend that EVERYONE, even those people who aren't
+currently having problems, upgrade.  There are problems which only reveal
+themselves under certain circumstances, and it is a preventative
+maintenance upgrade if nothing else. 
+
+configure.in:
+	* longlong/long long checking was changed to be cross-compiler friendly
+
+config.c:
+	* Added the LINK_PREFIX code.
+	* Added the SIZE_REPORT code.
+	* Changed HTML_OUTPUT syntax--it has a required second parameter that
+	  specifies the HTML output location.  The default example.cfg has a
+	  path of "./"
+	* Added the ADDITIVE_DB code.
+
+display.c:
+	* Removed the ALT tag text--the graphs now display nothing at all on
+	  non-graphical web browsers.
+	* Changed the display_misc function to accept the fact that the
+	  pointers_t struct changed.
+	* Fixed a bug that made the graphs all one long line when the highest
+	  count was less than 50 bytes/files.
+	* Added hyperlinks to the files and directories when a LINK_PREFIX is
+	  provided in the config file.
+	* Day-of-the-week and day-of-the-month reports weren't being centered
+	  in HTML output.  Fixed.
+	* Added file size report code to display_misc_totals.
+	* Changed the fopen() calls to use the HTML location specified as the
+	  argument to HTML_OUTPUT
+	* I now avoid realloc()ing a null pointer in big_number().  While it's
+	  technically legal, it could cause portability problems.
+	* I now free() the big_number() buffer.  Oops.
+
+hashstr.c:
+	* Previously I was leaking several hundred kilobytes when hash tables
+	  were destroyed.  This has been fixed.
+
+parselog.c:
+	* Fixed a serious problem; namely, I was abusing mmap()ed regions by
+	  assuming certain things that weren't true about them.  If you have no
+	  other reason to upgrade to 2.10, let this be your reason.
+	* I was also munmap()ing regions twice!  And the wrong region sometimes!
+	  What was I on when I wrote this?
+	* mmap() is no longer -required- (although it's used if it's found),
+	  which accounts for the additional twisting tangle of #ifdefs
+	* Wrapped the bulk of the parsing functions in a for loop to pick up
+	  multiple xferlogs
+
+xferstats.c:
+	* Stripped out all of my old sorting stuff, as I've decided to use
+	  libc's qsort().
+	* Added two sorting functions, they're basic.
+	* Added file size report generation code to generate_misc_data.
+	* If ADDITIVE_DB is specified in the configuration file, xferstats will
+	  generate a number of databases that can be parsed far more quickly
+	  than xferlogs.
+	* +A now turns on incoming traffic, outgoing traffic, the by-domain
+	  report and the by-size report (the first three should have been added
+	  long ago...oops.)
+	* -f disabled the report by Directory instead of the report by file.
+	  Fixed.
+	* TLD generation now uses previously generated domain data if possible,
+	  in order to save time (by processing fewer records)
+	* xferstats now allows multiple logfiles both in the configuration file
+	  and on the command line, using the list code previously used only in
+	  the pointers->config->only_dir bits.  All logfiles, however, must be
+	  of the same type :).
+
+xferstats.h:
+	* Anything in pointers_t that formerly used xfmisc_t now uses an array
+	  of void pointers.
+	* Removed ->next pointer from the xfmisc_t struct since it's being used
+	  within an array now.
+	* Added pointers->config->link_prefix pointer.
+	* Added pointers->first_size_ptr and pointers->size_arena pointers.
+	* Added pointers->html_location pointer.
+	* Changed pointers->config->additive_db to be a char * to a pathname
+	  instead of a char acting as a true/false indicator.
+	* MY_MALLOC macros are now expanded for readability.
+	* xferstats->config->file_name replaced with xferstats->config->logfiles
+
+--------------------------------------------------------------------------------
+v2.07 changes (Aug 04 1998):
+
+I've decided that Ultrix really doesn't have a working mmap().  It returns -1
+and sets errno to EINVAL no matter what I do--I know what I'm doing wrong and
+I'm tired of wasting time on it.  When I make it read from stdin, it segfaults
+doing a printf on valid variables.  I'm tired of screwing with it.  Until
+someone clues me in, I'm not supporting Ultrix (as if anyone still uses it to
+begin with). 
+
+All modules:
+	* Made some minor changes (mostly using 'typedef's instead of 'struct's
+	  which does little more but give me the oppourtunity to clean up that
+	  aspect of the code a bit)
+
+Makefile.in:
+	* The configure script says that HPUX doesn't have a working mmap
+	  either, but it works enough for xferstats purposes.  Configure detects
+	  HPUX and forces it now.
+	* xferstats warns on not finding mmap instead of erroring (so that if
+	  you know your mmap works, you can edit config.h)
+	* Added 'list.c' to the sources list
+	* 'make distclean' removes *~ to get rid of those silly xemacs backup
+	  files
+
+configure.in:
+	* -Wstrict-prototypes
+	* You couldn't disable arenas on Linux platforms.  Fixed.
+
+config.h.in:
+	* config.h is now multiple-#include-safe
+
+config.c:
+	* You can now specify multiple DIR_FILTER arguments and it will report
+	  on all of the directories.
+	* Modified LOG_TYPE for enabling 'apache' logfile parsing
+
+display.c:
+	* A mistake when defining the long month names (January, Februrary, etc
+	  vs Jan, Feb, etc) made "September" display as "SeptemberOctober".
+
+list.c:
+	* A set of quick list-handling routines originally written by Nat and
+	  cleaned up ever-so-slightly by me during work on another project.  I
+	  wanted it for the 'report stats on multiple directories' code, but
+	  I'll be slowly integrating it into other parts of xferstats as well
+
+parseline.c:
+	* Removed the file_length variable--it was pointless.
+	* Added support for the multiple DIR_FILTERs.
+	* Fixed a bug in ncftpd logfile parsing--when you specified only report
+	  on real users, it wouldn't report on anything.
+	* Changed some 'strncpy's to 'memcpy's in the interest of speed
+	* The wu-ftpd parser now distinguishes betweein 'guest' and 'anonymous'
+	* Added 'parse_apache_logfile' by demand.  Unfortunately the apache
+	  default logfile format isn't very descriptive, so I have mandated that
+	  xferstats/apache users must use a custom LogFormat line.  Also
+	  unfortunately, I can't make it look -exactly- like wu-ftpd (because of
+	  the anon/real user single char) so I'm still forced to use a new
+	  function.  The LogFormat line is:
+	  LogFormat "%{%a %b %d %X %Y}t %T %h %b %f %u"
+
+	  I may write a utility to convert standard apache logs into these logs
+	  at some point.  If this is something you want either (a) let me know
+	  so I can gauge demand or (b) do it and send it to me! :)
+
+xferstats.c:
+	* Changed startup stuff to correctly initialize pointers->only_dir for
+	  the new multiple DIR_FILTER stuff
+	* Multiple -D (the command-line version of DIR_FILTER) support added
+	* Added [+/-]g for turning guest data on and off, respectively
+	* Modified -T to turn on apache logfiles
+	* Fixed a bug that turned up when specifying a bad log type
+
+xferstats.h:
+	* Made the prototypes a bit more revealing by adding some variable
+	  names (and adding some prototypes that aren't necessary but are nice
+	  to all have in one place)
+	* '#ifdef'ed the arena_t definition (duh, why didn't I do this before?)
+	* Uses PATH_MAX if #defined for MAXPATHLEN, otherwise uses the default
+	  1024
+	* xferstats.h is now multiple-#include-safe
+	* Added 'guest_traffic' item to the config struct
+	* Added parse_apache_logfile prototype
+
+--------------------------------------------------------------------------------
+v2.06 changes (Jul 27 1998):
+
+Thank you to Ashley Frost <afrost@draconis.williams.edu> for reporting problems
+and providing an account on a Digital Unix machine to help me fix them.  Another
+conquered platform! 
+
+configure.in:
+	* Made a couple minor changes to the configure script, although it was
+	  mostly making the script more sensible, and really shouldn't change
+	  the way anything works.
+	* configure now checks for Digital Unix, the newest member of my "hated
+	  development platforms" list.  Digital Unix, which we all know and
+	  love, is the only platform that I know of that doesn't support %llu,
+	  but requires %Lu instead.  *hug*
+
+config.h.in:
+	* Added two lines for the IS_DEC #define
+
+config.c:
+	* Added some casts to (int) for tolower() and similar macros to get rid
+	  of ultra-pedantic DEC unix warnings *grumble*
+
+display.c:
+	* Fixed a bug revolving around BROKEN_LL for machines that don't have
+	  64 bit types.
+	* The <TITLE> tags were still getting placed even when NO_HTML_HEADERS
+	  was enabled.  Fixed.
+	* Had to add a bunch of #ifdef/#else/#endifs to cope with DEC unix's
+	  infinite silliness w.r.t. %Lu
+	* Added some unnecessary braces to get rid of ultra-pedantic DEC unix
+	  warnings *grumble*
+
+parselog.c:
+	* I had forgotten to make the AIX-specific pointer casting change to
+	  the ncftpd parsing function.
+	* Added some casts to (int) for tolower() and similar macros to get rid
+	  of ultra-pedantic DEC unix warnings *grumble*
+
+xferstats.c:
+	* I wasn't, for whatever reason, checking malloc return values when
+	  initializing all of the thread mutexs and stuff.  None of you should
+	  be using threaded xferstats anyways, but it needed fixing.
+	* Added a couple of lines to start the work on a feature that's coming
+	  up.
+	* Added some casts to (int) for tolower() and similar macros to get rid
+	  of ultra-pedantic DEC unix warnings *grumble*
+
+xferstats.h:
+	* Added a char to the config struct for an upcoming feature.  Those of
+	  you silly enough to pick through the code should ignore it for now.
+
+--------------------------------------------------------------------------------
+v2.05 changes (Jul 18 1998):
+
+Isn't the bleeding edge fun?
+
+display.c:
+	* I made a really stupid mistake that made using the multiple page HTML
+	  mode virtually impossible.  Now I check all of my fopens like a good
+	  boy.
+
+parselog.c:
+	* What appeased AIX made Solaris segfault (the mmap typecasting).  So
+	  I added an #ifdef _AIX ... boy do I appreciate Linux now...
+
+xferstats.c:
+	* Added command line toggle options "n" and "s" for NO_HTML_HEADERS and
+	  SINGLE_PAGE respectively.
+
+--------------------------------------------------------------------------------
+v2.04 changes (Jul 18 1998):
+
+Thanks again to Niklas Edmundsson <nikke@ing.umu.se> for providing some insight
+as to why some of my 2.03 fixes were inadequate.  If you folks want to donate
+some accounts on HP/UX, AIX, Irix, etc machines, by all means do.
+
+configure:
+	* I didn't get the variable name right in one section, so the AIX mmap
+	  force did not work.  It should *fingers crossed* work this time.
+	* Memory arenas are only turned on for Linux systems, although I left
+	  the --enable-arenas option intact so that you can force them if you
+	  want to see if they'll work.  If you find a non-Linux system that they
+	  do work properly on, let me know.  If you think you know why they
+	  don't work and want to fix them, I'm taking patches :)
+
+arena.c:
+	* Not initializing the *arena pointer causes inexplicable crashes.
+	  Neither Niklas nor I see why, but initializing it to NULL fixes it, so
+	  I'm not going to dig deeper right now.
+
+config.c:
+	* printf on linux happily printfs nothing for NULL strings, but alas,
+	  Solaris wants to segfault.  So I appease Solaris by printing the
+	  string "(nil)" instead.
+	* Added the SINGLE_PAGE option to generate a single HTML page instead
+	  of a separate file for each section.  The SINGLE_PAGE option does not
+	  generate <HTML> or <BODY> tags, but does generate a <TITLE> tag unless
+	  the NO_HTML_HEADERS option is also specified.
+
+display.c:
+	* A non-breaking space was added to the HTML tables when there is no
+	  graph (ie, the data is < .1% of the total) to avoid the "flat" look.
+	* Support for the SINGLE_PAGE option.
+	* Added a small, unobtrusive notice and link to the xferstats home page
+	  at the bottom of totals.html
+
+parselog.c:
+	* I had left some variables in #debug sections that I deleted from the
+	  ftp_line structs which obviously hindered compilation.
+
+hashstr.c:
+	* Made some casting changes to take care of sizeof(size_t) warnings
+
+xferstats.c:
+	* Fixed a sorting bug that was making xferstats lie when using the
+	  "report only the first x items" feature.  I suspect this affected a
+	  lot of you who just failed to notice, as I did.
+	* Changed the way xferstats handles command-line args.  Specifying one
+	  argument no longer clears any arguments that you failed to set.  This
+	  was useful back in the days before the config file and having both
+	  + and - options, but is now a hinderance.
+
+--------------------------------------------------------------------------------
+v2.03 changes (Jul 13 1998):
+
+These are mostly Solaris/AIX compatibility fixes, although a new obscure
+feature or two have been added.
+
+Niklas Edmundsson <nikke@ing.umu.se> is responsible for telling me about most of
+these problems, so if you benefit from these changes, thank him as well.  Greg
+Piney <greg_piney@mcgraw-hill.com> provided a Solaris account which made testing
+these changes significantly easier.  Thank you to both of you.
+
+configure:
+	* configure properly checks to see if the CFLAGS environment variable
+	  has been defined, and uses it
+	* configure doesn't properly detect the existance of mmap() on AIX, so
+	  I force it for AIX builds
+
+arena.c:
+	* Solaris (and possibly other platforms) didn't like the way I did
+	  memory arenas, likely because of an alignment problem.  If you get
+	  immediate, unexplained bus errors, try configure --disable-arena
+
+config.c:
+	* Silly me was comparing a (char) with an (int) that for some reason
+	  made the AIX version (and no other platforms) segfault.
+	* Added the NO_HTML_HEADERS option, see the man page for details
+
+hashstr.c:
+	* Added a small optimization to add_hash_string
+
+xferstats.c:
+	* Apparantly malloc_stats() is a Linux-only thing.  Checking to see if
+	  malloc.h exists isn't enough, so configure now checks specifically
+	  for malloc_stats().
+
+--------------------------------------------------------------------------------
+v2.02 changes (Jul 07 1998):
+
+parselog.c:
+	* A debug message was accidentally left in, causing debug messages to
+	  scroll at runtime.
+
+--------------------------------------------------------------------------------
+v2.01 changes (Jul 07 1998):
+
+	* Added a section to the configure script and rearranged the #include
+	  order of parselog.c to fix FreeBSD compilation.
+	* Included the JPGs for the graphs in the RPM, which I forgot to do in
+	  the first release.
+
+xferstats.c
+	* Fixed a bug that would cause the "From <day> to <day>" header to be
+	  incorrect.  Thank you Stephen Kwan <sxk13@psu.edu> for providing some
+	  xferlogs that consistently reproduced said bug.
+
+display.c:
+	* </HTML> tags missing from the very end of all of the HTML output
+	* Added a CR to the end of all of the HTML as well, apparantly vi
+	  likes it better that way.
+
+--------------------------------------------------------------------------------
+v2.00 changes (Jul 01 1998):
+
+	* The code was split up into many source files to facilitate some small
+	  code re-use and create a more logical setup.  The remainder of the
+	  changes will be listed with respect to the source file that the change
+	  took place in (if applicable)
+
+All modules:
+	* Fantastic performance gains were realized by changing the way
+	  functions worked, which were called, when, and how.
+	* The old function of config.h has been replaced by a runtime
+	  configuration file. (see the config.c section and the man page for
+	  more detail)
+	* config.h is now generated by the 'configure' script
+	* As a result of the 'configure' script, xferstats now builds on more
+	  systems, with less effort.  If it won't build for you, please let me
+	  know, with a copy of the error listing and solution if possible.  If
+	  you can give me a user account on the machine in question to help me
+	  fix it, all the better.
+	* xferstats is now threaded through the use of POSIX threads.  If you
+	  want a threaded xferstats, add the '--enable-pthreads' option to your
+	  configure.
+	* xferstats uses 'long long' data types when possible--if the
+	  'configure' script doesn't find them and you know your system has an
+	  equivalent 64 bit type, please mail me and tell me what the hell it's
+	  called on your system.
+	* The 'configure' option '--enable-smfs' will sacrifice memory when
+	  possible for speed.  It does this by: (a) not freeing any memory until
+	  it exits (b) not freeing any arenas until it exits.  Since the logs I
+	  use for testing are around 55 megs, this option is great for me, and
+	  xferstats rarely climbs above 70 megs when processing these logs
+	* xferstats has been tested (successfully--that means it compiles
+	  cleanly and runs properly) on the following platforms and operating
+	  systems:
+
+	  Linux 2.0.x and 2.1.x on a single-processor P2 using gcc
+	  Linux 2.0.x and 2.1.x on a single-processor P2 using egcs
+	  Linux 2.0.x and 2.1.x on a dual-processor PPro using gcc
+	  Linux 2.0.x and 2.1.x on a dual-processor PPro using egcs
+	  Linux 2.1.x on a dual-processor Pentium using gcc
+	  Linux 2.1.x on a SparcClassic using gcc
+	  Linux 2.? on an unknown Alpha using presumably gcc
+
+arena.c:
+	* This module holds the memory arena code.  In the past, xferstats made
+	  far too many malloc() calls, creating some rather unnecessary
+	  overhead.  The memory arenas consolidate the requests for memory into
+	  chunks.
+	* The default arena size is 16384 bytes, it can be changed in
+	  xferstats.h
+
+config.c:
+	* This file contains all of the code to parse and act on the contents of
+	  an xferstats configuration file.  It was designed to be entirely
+	  self-sufficient and easy to drop into any program.  For more
+	  information on the syntax of the configuration file, consult the man
+	  page.
+
+display.c:
+	* HTML reports now go to individual files by report, with totals.html
+	  being the top level, linking to the rest of them.
+	* You can limit the size of a given report with the MAX_REPORT_SIZE
+	  config command.  HTML and text tables will be split up into several
+	  tables if they grow larger than this size.
+	* Some threading code was added to insure that no two data-spewing
+	  functions ran at the same time, causing text reports to be
+	  interleaved.
+	* In HTML reports, most big numbers are split up with commas to make
+	  them easier to read (but harder, I suppose, for other programs to
+	  parse.  Maybe this will be a configurable option at some point...)
+	* Certain HTML reports contain more data than their text counterparts,
+	  simply because the text reports were too tight on space to keep them
+	  within 79 characters (some terminal types really hate that 80th
+	  character, so I just drop it)
+	* HTML graphs of the past that were in their own individual dynamically
+	  created GIFs have been replaced.  The graphs are now part of the data
+	  table itself, using tiny JPGs to build it.
+
+hashstr.c:
+	* This module was written by Nat Friedman for a project of his own, and
+	  he thought it would be useful in xferstats, so he sent it to me.  It
+	  turned out to be quite useful, and I use hash tables to keep track of
+	  file, directory, host, domain, and TLD data.
+	* I added a couple functions, and modified a couple others, to make the
+	  hash table stuff work with xferstats' structs and provide a little
+	  extra functionality.
+
+parselog.c:
+	* This is the new home for the functions that grok ftp logs (or any
+	  other sort of log, for that matter).
+	* wu-ftpd and ncftpd parsing (the only two that I've written at this
+	  point) now mmap() which provides a small speed increase.
+	* ncftpd log parsing changed to accomodate the new log format (which
+	  -finally- includes a 4-digit year).
+
+xferstats.c:
+	* In the interest of efficiency, the function that converts months like
+	  "Jan" to integers 1-12 returns as soon as it can exclude other months.
+	  Therefore, "Jan", "Jar", "Jagawagavoovoo", etc. all return 1.
+	* Likewise with the days-of-the-week function.  "Sun", "Superman", and
+	  "Su" will all return 1.
+	* xferstats now generates the following reports: daily, hourly, monthly,
+	  by day of the month (1st, 2nd, 3rd, etc), by day of the week (Monday,
+	  Tuesday, etc), by individual file, by directory (variable depth), by
+	  host, by domain, by top-level domain, and the totals.
+	* A lot of added threading code now somewhat obfusicates the 'main'
+	  function.  It may be cleaned up at some point in the future, but for
+	  now, since it ain't broke, I ain't fixin' it.
+	* More fantastic performance gains by changing the way xferstats sorted
+	  its files, directories, hosts, domains, and TLDs.  If you set a
+	  maximum number of records to keep (NUMBER_xxx_STATS in your
+	  configuration file--you should always set this if your logs are
+	  getting huge), xferstats will run much much much faster, as expected.
+
+--------------------------------------------------------------------------------
+v1.16 changes (Dec 14 1997):
+
+	Please note: if you have a gigantic logfile (or use the - command
+	line option (read from stdin)), you almost certainly don't want to use
+	v1.16.  I guarantee that stdin filereading is completely 100% broken
+	in every way, shape, and form.  A complete overhaul is in the works to
+	make it take up far less ram at a slight speed expense.  Please be
+	patient.
+
+	* log parsing changed, now catches many more erroneous situations
+		gracefully
+	* fixed a -s <section> bug that prevented it from working
+	* increased ANSI C compliance
+	* added some long command line options (--version, --help)
+	* a trailing / is added to the gif paths if you forget them.  previous
+		versions simply wouldn't generate any graphs
+	* some changes to make large logfiles parse more correctly were
+		added, breaking sorting in the process.
+
+--------------------------------------------------------------------------------
+v1.15 changes (Nov 16 1997):
+	* optional HTML output
+	* GIF graphs to go along with the HTML output
+	* the domain totals are now sorted (by bytes transferred)
+	* added the ability to limit the number of lines in certain reports.
+		added the corresponding config.h entries and command line
+		arguments.
+	* a new cmdline parser instead of relying on getopt, which has annoyed
+		me for a while.  this also eliminates the need for a separate
+		solaris entry in the Makefile.
+	* accepts the logfiles from stdin, just place a single hyphen 
+		somewhere in the parameter list
+	* xferstats now parses ncftpd-generated logfiles too!
+
+--------------------------------------------------------------------------------
+v1.10 changes (Nov 06 1997):
+	* added the "Most Downloaded Files" section
+	* added corresponding -p <length> parameter
+	* fixed a typo that only affects DEBUG output, but in a big way
+	* added more configurable options and split them off into config.h
+	* boosted variable sizes to accomodate huge xferlogs
+	* fixed dotted quad recognition
+	* a big big big thanks to Nat Friedman <ndf@mit.edu> and Elliot Lee
+		<sopwith@redhat.com> for taking a look at the code and sending
+		a couple key fixes
+
+--------------------------------------------------------------------------------
+v1.03 changes (Oct 25 1997):
+	* check to make sure the xferlog file actually exists
+		thanks to: Emil Isberg <emil.isberg@mds.mdh.se>
+	* added a small Solaris compatibility flag
+		thanks to: Emil Isberg <emil.isberg@mds.mdh.se>
+	* added INSTALL file and man page, modified the Makefile
+
+--------------------------------------------------------------------------------
+v1.02 changes (Sep 27 1997):
+	* added -s <section> support
+	* made a Makefile for the compiling-impaired
+	* dotted quads now show as "unresolved" (as they should!)
+
+--------------------------------------------------------------------------------
+v1.01 changes:
+	* allowed for > 100kb/sec transfer rates in the totals
+	* fixed hostname parsing for hostnames without a '.' (ie, localhost).
+		they now show as unresolved
+	* made -A the default
+	* made parsing compatible with the new way of documenting guest logins
+		('g' instead of 'a')

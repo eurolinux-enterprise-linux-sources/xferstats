@@ -1,0 +1,70 @@
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
+/*
+ * xferstats, a wu-ftpd and ncftpd logfile parser and report generator
+ * Copyright 1997-2000 Phil Schwan <phil@off.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
+
+/* ----      do not edit unless 'configure' doesn't get it right       ---- */
+/* ---- in that case, edit the resulting config.h, not the config.h.in ---- */
+
+/* define if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+/* define if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+/* define if you have the <ctype.h> header file. */
+#undef HAVE_CTYPE_H
+/* define if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+/* define if you have the <signum.h> header file. */
+#undef HAVE_SIGNUM_H
+/* define if you have the <sys/signal.h> header file. */
+#undef HAVE_SYS_SIGNAL_H
+/* define if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+/* define if you have the <alloca.h> header file. */
+#undef HAVE_ALLOCA_H
+/* define if you have a working 'mmap' system call. */
+#undef HAVE_MMAP
+/* define if you have a working 'strchr' function. */
+#undef HAVE_STRCHR
+/* define if you have a working 'strcasecmp' function. */
+#undef HAVE_STRCASECMP
+/* define to sacrifice memory for speed. */
+#undef SMFS
+/* define to enable memory arenas */
+#undef ENABLE_ARENAS
+/* define to enable malloc_stats */
+#undef HAVE_MALLOC_STATS
+
+#define LONGLONG long
+/* define if LONGLONG is < 64 bits (or the %llu format specifier is invalid) */
+#undef BROKEN_LL
+/* define if this is a Digital Unix system (because it doesn't like %llu :-P) */
+#undef IS_DEC
+/* define for various levels of debugging information */
+#undef DEBUG
+#undef DEBUG2
+#undef DEBUG3
+#undef DEBUGS
+#undef DEBUG_MALLOC
+/* define here if not already defined */
+#undef __ptr_t
+
+#endif /* _CONFIG_H */

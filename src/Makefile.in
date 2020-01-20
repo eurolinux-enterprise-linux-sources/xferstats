@@ -1,0 +1,68 @@
+# You really really really really really really should use 'configure' instead.
+# If you -insist- on changing these values by hand, at least run 'configure'
+# first and change the resulting Makefile rather than messing up this
+# Makefile.in (unless you're sure you know what you're doing).  That having been
+# said, if you're sure you really want to change things, here's your list:
+#
+# -DHAVE_CONFIG_H : you need this to compile properly
+# -DDEBUGS        : gives a progress report as it runs
+# -DDEBUG         : generates quite a bit of debugging information
+# -DDEBUG2        : different (more) debugging information
+# -DDEBUG3        : debug information about xferlog parsing
+# -DSMFS          : sacrifice memory for speed (no additional output)
+#
+DEFS = @DEFS@
+#
+# Chances are that a great deal of this debug information won't
+# mean a thing to you unless you've taken the time to read the
+# source code (not that I necessarily recommend this :)
+
+# to use electricfence, you would add -lefence to the LIBS line
+LIBS = @LIBS@ @GLIB_LIBS@
+
+# Add any options here
+DEFAULT_CONFIGURE_OPTIONS =
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+CFLAGS = $(DEFS) @CFLAGS@ @GLIB_CFLAGS@
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+CC = @CC@
+PROGS = xferstats
+BINDIR = @bindir@
+MANDIR = @mandir@
+INSTALL = @INSTALL@
+SRC = config.c display.c parselog.c xferstats.c
+OBJ = $(SRC:.c=.o)
+HDR = config.h xferstats.h
+
+COMPILE.c = $(CC) $(CFLAGS) -c $(CPPFLAGS)
+
+all: $(PROGS)
+
+xferstats: Makefile $(OBJ) $(HDR)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
+
+Makefile: Makefile.in
+	./configure $(DEFAULT_CONFIGURE_OPTIONS)
+
+%.o: %.c Makefile $(HDR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+install: $(PROGS)
+	${INSTALL} -d ${BINDIR}
+	${INSTALL} -d ${MANDIR}/man8
+	${INSTALL} -d ${prefix}/etc
+	@set -x ;for i in $(PROGS) ; do \
+	${INSTALL} -c -m 755 $$i ${BINDIR} ; done
+	@echo Installing man page...
+	${INSTALL} -c -m 644 xferstats.8 ${MANDIR}/man8/xferstats.8
+	@echo Installing configuration file...
+	${INSTALL} -c -m 644 xferstats.cfg ${prefix}/etc/xferstats.cfg
+
+clean:
+	rm -f $(PROGS) $(OBJ)
+
+distclean:
+	rm -f $(PROGS) $(OBJ) config.h Makefile config.status config.log config.cache core *.html *~ *.xdb

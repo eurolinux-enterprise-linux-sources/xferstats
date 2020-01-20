@@ -1,0 +1,12 @@
+--- xferstats-2.16/xferstats.8	2013-04-04 10:47:07.647973912 +0200
++++ xferstats-2.16/xferstats.8.new	2013-04-04 10:46:28.000000000 +0200
+@@ -145,6 +145,9 @@
+ When enabled, xferstats will generate a report listing traffic by month
+ (January, February, etc.)
+ .TP
++.B S
++When enabled, xferstats will generate a report listing traffic by file size
++.TP
+ .B w
+ When enabled, xferstats will generate a report listing traffic by day of the
+ week (Monday, Tuesday, etc.)
